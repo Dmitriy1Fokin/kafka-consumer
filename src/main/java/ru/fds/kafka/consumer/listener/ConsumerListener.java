@@ -2,6 +2,8 @@ package ru.fds.kafka.consumer.listener;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.annotation.PartitionOffset;
+import org.springframework.kafka.annotation.TopicPartition;
 import org.springframework.kafka.support.KafkaHeaders;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -18,11 +20,21 @@ public class ConsumerListener {
         this.constants = constants;
     }
 
-    @KafkaListener(topics = "#{constants.topicNameSimple}", groupId = "#{constants.groupNameSimple}")
+    @KafkaListener(topics = {"#{constants.topicNameCallback}", "#{constants.topicNameSimple}"}, groupId = "#{constants.groupNameSimple}")
     public void listenGroupFoo(@Payload String message,
-                               @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
-        log.info("Received Message in group {}: {}. Partition: {}", constants.getGroupNameSimple(), message, partition);
+                               @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
+        log.info("Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}", topicName, constants.getGroupNameSimple(), message, partition);
     }
 
+    @KafkaListener(topicPartitions = @TopicPartition(topic = "#{constants.topicNameSimple}",
+                                                        partitionOffsets = {
+                                                                @PartitionOffset(partition = "1", initialOffset = "0"),
+                                                                @PartitionOffset(partition = "3", initialOffset = "0")}),
+                groupId = "#{constants.groupNameTwoPartitions}")
+    public void listenToPartition(@Payload String message,
+                                  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
+        log.info("Received message: {} from partition: {}", message, partition);
+    }
 
 }

@@ -15,4 +15,5 @@ public class Constants {
     private String topicNameSimple;
     private String topicNameCallback;
     private String groupNameSimple;
+    private String groupNameTwoPartitions;
 }
