@@ -14,6 +14,8 @@ public class Constants {
     private String bootstrapAddress;
     private String topicNameSimple;
     private String topicNameCallback;
+    private String topicNameFilter;
     private String groupNameSimple;
     private String groupNameTwoPartitions;
+    private String groupNameFilter;
 }

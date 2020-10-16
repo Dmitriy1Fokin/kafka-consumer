@@ -20,11 +20,11 @@ public class ConsumerListener {
         this.constants = constants;
     }
 
-    @KafkaListener(topics = {"#{constants.topicNameCallback}", "#{constants.topicNameSimple}"}, groupId = "#{constants.groupNameSimple}")
-    public void listenGroupFoo(@Payload String message,
-                               @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
-                               @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
-        log.info("Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}", topicName, constants.getGroupNameSimple(), message, partition);
+    @KafkaListener(topics = {"#{constants.topicNameSimple}"}, groupId = "#{constants.groupNameSimple}")
+    public void listenSimpleTopic(@Payload String message,
+                                  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                                  @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
+        log.info("listenSimpleTopic. Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}", topicName, constants.getGroupNameSimple(), message, partition);
     }
 
     @KafkaListener(topicPartitions = @TopicPartition(topic = "#{constants.topicNameSimple}",
@@ -34,7 +34,20 @@ public class ConsumerListener {
                 groupId = "#{constants.groupNameTwoPartitions}")
     public void listenToPartition(@Payload String message,
                                   @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition) {
-        log.info("Received message: {} from partition: {}", message, partition);
+        log.info("listenToPartition. Received message: {} from partition: {}", message, partition);
+    }
+
+    @KafkaListener(topics = "#{constants.topicNameCallback}", groupId = "#{constants.groupNameSimple}")
+    public void listenTopicWithCallback(String message,
+                                        @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                                        @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
+        log.info("listenTopicWithCallback. Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}", topicName, constants.getGroupNameSimple(), message, partition);
+    }
+
+    @KafkaListener(topics = "#{constants.topicNameFilter}",
+            containerFactory = "filterKafkaListenerContainerFactory")
+    public void listenWithFilter(Integer message) {
+        log.info("listenWithFilter. Received Message in filtered listener: {}", message);
     }
 
 }
