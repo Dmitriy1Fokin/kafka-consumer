@@ -9,6 +9,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import ru.fds.kafka.consumer.Constants;
+import ru.fds.kafka.consumer.dto.Message;
 
 @Slf4j
 @Component
@@ -50,4 +51,9 @@ public class ConsumerListener {
         log.info("listenWithFilter. Received Message in filtered listener: {}", message);
     }
 
+    @KafkaListener(topics = "#{constants.topicNameObject}",
+            containerFactory = "messageKafkaListenerContainerFactory")
+    public void listenMessageObject(Message message) {
+        log.info("listenMessageObject. Received Message in filtered listener: {}", message);
+    }
 }
