@@ -56,4 +56,16 @@ public class ConsumerListener {
     public void listenMessageObject(Message message) {
         log.info("listenMessageObject. Received Message in filtered listener: {}", message);
     }
+
+    @KafkaListener(topics = "#{constants.topicNameStreamTable}",
+            groupId = "#{constants.groupNameSimple}",
+            containerFactory = "longKafkaListenerContainerFactory")
+    public void listenStreamTable(Long message,
+                                  @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
+                                  @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
+                                  @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
+        log.info("listenStreamTable. Received Message from topic: {}, in group: {}. Key: {}, Message: {}. Partition: {}",
+                topicName, constants.getGroupNameSimple(),key, message, partition);
+    }
+
 }

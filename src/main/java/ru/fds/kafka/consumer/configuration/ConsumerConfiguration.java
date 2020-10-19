@@ -2,6 +2,7 @@ package ru.fds.kafka.consumer.configuration;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
+import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -58,6 +59,24 @@ public class ConsumerConfiguration {
         factory.setConsumerFactory(integerConsumerFactory(constants.getGroupNameFilter()));
         factory.setRecordFilterStrategy(consumerRecord -> consumerRecord.value() < 0 || consumerRecord.value() > 10);
         return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, Long> longKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Long> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(longConsumerFactory(constants.getGroupNameFilter()));
+        factory.setRecordFilterStrategy(consumerRecord -> consumerRecord.value() < 0 || consumerRecord.value() > 10);
+        return factory;
+    }
+
+    public ConsumerFactory<String, Long> longConsumerFactory(String groupId) {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, constants.getBootstrapAddress());
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
+        return new DefaultKafkaConsumerFactory<>(props);
     }
 
     public ConsumerFactory<String, Integer> integerConsumerFactory(String groupId) {
