@@ -22,4 +22,5 @@ public class Message {
     private LocalDateTime localDateTime;
     private Double aDouble;
     private Integer integer;
+    private TypeEnum typeEnum;
 }
