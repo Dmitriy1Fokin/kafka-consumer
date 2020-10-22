@@ -1,6 +1,7 @@
 package ru.fds.kafka.consumer.configuration;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
 import org.apache.kafka.common.serialization.LongDeserializer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -61,6 +62,15 @@ public class ConsumerConfiguration {
         return factory;
     }
 
+    public ConsumerFactory<String, Integer> integerConsumerFactory(String groupId) {
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, constants.getBootstrapAddress());
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
+        return new DefaultKafkaConsumerFactory<>(props);
+    }
+
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Long> longKafkaListenerContainerFactory() {
         ConcurrentKafkaListenerContainerFactory<String, Long> factory =
@@ -79,14 +89,6 @@ public class ConsumerConfiguration {
         return new DefaultKafkaConsumerFactory<>(props);
     }
 
-    public ConsumerFactory<String, Integer> integerConsumerFactory(String groupId) {
-        Map<String, Object> props = new HashMap<>();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, constants.getBootstrapAddress());
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, IntegerDeserializer.class);
-        return new DefaultKafkaConsumerFactory<>(props);
-    }
 
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Message> messageKafkaListenerContainerFactory() {
@@ -110,5 +112,21 @@ public class ConsumerConfiguration {
         messageJsonDeserializer.addTrustedPackages("ru.fds.kafka.producer.dto");
         messageJsonDeserializer.setUseTypeMapperForKey(true);
         return messageJsonDeserializer;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, byte[]> fileKafkaListenerContainerFactory(){
+        ConcurrentKafkaListenerContainerFactory<String, byte[]> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(fileConsumerFactory(constants.getGroupNameSimple()));
+        return factory;
+    }
+
+    public ConsumerFactory<String, byte[]> fileConsumerFactory(String groupId){
+        Map<String, Object> props = new HashMap<>();
+        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, constants.getBootstrapAddress());
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, groupId);
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, ByteArrayDeserializer.class);
+        return new DefaultKafkaConsumerFactory<>(props);
     }
 }

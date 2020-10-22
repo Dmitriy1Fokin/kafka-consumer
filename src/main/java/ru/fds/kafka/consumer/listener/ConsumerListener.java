@@ -11,6 +11,12 @@ import org.springframework.stereotype.Component;
 import ru.fds.kafka.consumer.Constants;
 import ru.fds.kafka.consumer.dto.Message;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+
 @Slf4j
 @Component
 public class ConsumerListener {
@@ -25,7 +31,8 @@ public class ConsumerListener {
     public void listenSimpleTopic(@Payload String message,
                                   @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                   @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
-        log.info("listenSimpleTopic. Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}", topicName, constants.getGroupNameSimple(), message, partition);
+        log.info("listenSimpleTopic. Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}",
+                topicName, constants.getGroupNameSimple(), message, partition);
     }
 
     @KafkaListener(topicPartitions = @TopicPartition(topic = "#{constants.topicNameSimple}",
@@ -42,7 +49,8 @@ public class ConsumerListener {
     public void listenTopicWithCallback(String message,
                                         @Header(KafkaHeaders.RECEIVED_PARTITION_ID) int partition,
                                         @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
-        log.info("listenTopicWithCallback. Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}", topicName, constants.getGroupNameSimple(), message, partition);
+        log.info("listenTopicWithCallback. Received Message from topic: {}, in group: {}. Message: {}.   Partition: {}",
+                topicName, constants.getGroupNameSimple(), message, partition);
     }
 
     @KafkaListener(topics = "#{constants.topicNameFilter}",
@@ -66,6 +74,34 @@ public class ConsumerListener {
                                   @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName) {
         log.info("listenStreamTable. Received Message from topic: {}, in group: {}. Key: {}, Message: {}. Partition: {}",
                 topicName, constants.getGroupNameSimple(),key, message, partition);
+    }
+
+    @KafkaListener(topics = "#{constants.topicNameFile}",
+            containerFactory = "fileKafkaListenerContainerFactory")
+    public void listenFile(byte[] file,
+                           @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
+                           @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName){
+
+        InputStream inputStream = new ByteArrayInputStream(file);
+        File inputDir = new File(constants.getWorkDir());
+        String fileLocation = inputDir + File.separator + key;
+
+        try (FileOutputStream fileOutputStream = new FileOutputStream(fileLocation)){
+            int ch;
+            while ((ch = inputStream.read()) != -1){
+                fileOutputStream.write(ch);
+            }
+
+            fileOutputStream.flush();
+
+        }catch (IOException ex){
+            log.error("listenFile. {}", ex.getMessage());
+        }
+
+
+        log.info("listenFile. Received Message from topic: {}, in group: {}. Key: {}, File: {}",
+                topicName, constants.getGroupNameSimple(), key, fileLocation);
+
     }
 
 }

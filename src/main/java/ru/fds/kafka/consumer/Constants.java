@@ -17,7 +17,9 @@ public class Constants {
     private String topicNameFilter;
     private String topicNameObject;
     private String topicNameStreamTable;
+    private String topicNameFile;
     private String groupNameSimple;
     private String groupNameTwoPartitions;
     private String groupNameFilter;
+    private String workDir;
 }
