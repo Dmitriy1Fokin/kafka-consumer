@@ -10,21 +10,21 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import ru.fds.kafka.consumer.Constants;
 import ru.fds.kafka.consumer.dto.Message;
+import ru.fds.kafka.consumer.service.FileServiceImpl;
 
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 
 @Slf4j
 @Component
 public class ConsumerListener {
 
     private final Constants constants;
+    private final FileServiceImpl fileService;
 
-    public ConsumerListener(Constants constants) {
+    public ConsumerListener(Constants constants,
+                            FileServiceImpl fileService) {
         this.constants = constants;
+        this.fileService = fileService;
     }
 
     @KafkaListener(topics = {"#{constants.topicNameSimple}"}, groupId = "#{constants.groupNameSimple}")
@@ -76,32 +76,21 @@ public class ConsumerListener {
                 topicName, constants.getGroupNameSimple(),key, message, partition);
     }
 
-    @KafkaListener(topics = "#{constants.topicNameFile}",
+    @KafkaListener(topics = {"#{constants.topicNameFile}", "BANKDETAILS_SEND"},
             containerFactory = "fileKafkaListenerContainerFactory")
     public void listenFile(byte[] file,
                            @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                            @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName){
 
-        InputStream inputStream = new ByteArrayInputStream(file);
-        File inputDir = new File(constants.getWorkDir());
-        String fileLocation = inputDir + File.separator + key;
+        String fileLocation;
+        try {
+            fileLocation = fileService.saveFile(file, key);
 
-        try (FileOutputStream fileOutputStream = new FileOutputStream(fileLocation)){
-            int ch;
-            while ((ch = inputStream.read()) != -1){
-                fileOutputStream.write(ch);
-            }
+            log.info("listenFile. Received Message from topic: {}, in group: {}. Key: {}, File: {}",
+                    topicName, constants.getGroupNameSimple(), key, fileLocation);
 
-            fileOutputStream.flush();
-
-        }catch (IOException ex){
-            log.error("listenFile. {}", ex.getMessage());
+        }catch (IOException e){
+            log.error("listenFile. Error message:{}",e.getMessage());
         }
-
-
-        log.info("listenFile. Received Message from topic: {}, in group: {}. Key: {}, File: {}",
-                topicName, constants.getGroupNameSimple(), key, fileLocation);
-
     }
-
 }
