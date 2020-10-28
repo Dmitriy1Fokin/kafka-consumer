@@ -18,6 +18,8 @@ public class Constants {
     private String topicNameObject;
     private String topicNameStreamTable;
     private String topicNameFile;
+    private String topicNameRequest0;
+    private String topicNameAnswer0;
     private String groupNameSimple;
     private String groupNameTwoPartitions;
     private String groupNameFilter;

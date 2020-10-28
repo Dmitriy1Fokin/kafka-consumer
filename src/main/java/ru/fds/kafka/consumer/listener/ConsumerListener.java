@@ -10,9 +10,14 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import ru.fds.kafka.consumer.Constants;
 import ru.fds.kafka.consumer.dto.Message;
-import ru.fds.kafka.consumer.service.FileServiceImpl;
+import ru.fds.kafka.consumer.service.SendService;
+import ru.fds.kafka.consumer.service.impl.FileServiceImpl;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -20,11 +25,14 @@ public class ConsumerListener {
 
     private final Constants constants;
     private final FileServiceImpl fileService;
+    private final SendService sendService;
 
     public ConsumerListener(Constants constants,
-                            FileServiceImpl fileService) {
+                            FileServiceImpl fileService,
+                            SendService sendService) {
         this.constants = constants;
         this.fileService = fileService;
+        this.sendService = sendService;
     }
 
     @KafkaListener(topics = {"#{constants.topicNameSimple}"}, groupId = "#{constants.groupNameSimple}")
@@ -76,13 +84,13 @@ public class ConsumerListener {
                 topicName, constants.getGroupNameSimple(),key, message, partition);
     }
 
-    @KafkaListener(topics = {"#{constants.topicNameFile}", "BANKDETAILS_SEND"},
+    @KafkaListener(topics = {"#{constants.topicNameFile}"},
             containerFactory = "fileKafkaListenerContainerFactory")
     public void listenFile(byte[] file,
                            @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
                            @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName){
 
-        String fileLocation;
+        Path fileLocation;
         try {
             fileLocation = fileService.saveFile(file, key);
 
@@ -92,5 +100,37 @@ public class ConsumerListener {
         }catch (IOException e){
             log.error("listenFile. Error message:{}",e.getMessage());
         }
+    }
+
+    @KafkaListener(topics = {"#{constants.topicNameRequest0}"},
+            containerFactory = "fileKafkaListenerContainerFactory")
+    public void listenRequest0(byte[] file,
+                              @Header(KafkaHeaders.RECEIVED_MESSAGE_KEY) String key,
+                              @Header(KafkaHeaders.RECEIVED_TOPIC) String topicName){
+
+        Path fileLocation;
+        try {
+            String fileName = constants.getWorkDir() + File.separator + key;
+            fileLocation = fileService.saveFile(file, fileName);
+            log.info("listenFile. Received Message from topic: {}, in group: {}. Key: {}, File: {}",
+                    topicName, constants.getGroupNameSimple(), key, fileLocation.getFileName().toString());
+
+        }catch (IOException e){
+            log.error("listenFile. Error message:{}",e.getMessage());
+            return;
+        }
+
+
+        Optional<Path> answerPath = fileService.createFileFromZip(fileLocation);
+        if(answerPath.isPresent()){
+            try {
+                sendService.sendFileAnswer0(fileLocation);
+                Path synFile = Path.of(answerPath.get().getFileName().toString().replace("zip", "syn"));
+                sendService.sendFileAnswer0(Files.createFile(synFile));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 }
