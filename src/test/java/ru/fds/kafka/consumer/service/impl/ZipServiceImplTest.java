@@ -18,9 +18,6 @@ class ZipServiceImplTest {
     @Autowired
     ZipService zipService;
 
-
-
-
     @Test
     void zipFile() throws IOException {
         String fileTestName = "testFile";
