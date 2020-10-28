@@ -38,7 +38,7 @@ public class ZipServiceImpl implements ZipService {
     @Override
     public Path zipFiles(List<Path> filesPath, String zipName) throws IOException{
         List<String> filesPathString = filesPath.stream()
-                .map(path -> path.getFileName().toString())
+                .map(path -> path.toAbsolutePath().toString())
                 .collect(Collectors.toList());
 
         try(FileOutputStream fos = new FileOutputStream(zipName);

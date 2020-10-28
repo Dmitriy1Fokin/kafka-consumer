@@ -55,11 +55,11 @@ public class FileServiceImpl implements FileService {
 
             List<Path> answerFiles = new ArrayList<>(unzipFiles.size());
             for(Path path : unzipFiles){
-                String newName = path.getFileName().toString().replace("REQUEST", "ANSWER");
+                String newName = path.toAbsolutePath().toString().replace("REQUEST", "ANSWER");
                 answerFiles.add(Files.move(path, Path.of(newName)));
             }
 
-            Path zipAnswer = zipService.zipFiles(answerFiles, filePath.getFileName().toString().replace("REQUEST", "ANSWER"));
+            Path zipAnswer = zipService.zipFiles(answerFiles, filePath.toAbsolutePath().toString().replace("REQUEST", "ANSWER"));
 
             return Optional.of(zipAnswer);
 
