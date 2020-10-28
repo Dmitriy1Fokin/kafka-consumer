@@ -126,7 +126,7 @@ public class ConsumerListener {
             try {
                 sendService.sendFileAnswer0(answerPath.get());
                 log.info("Send message:{}", answerPath.get().getFileName().toString());
-                Path synFile = Path.of(answerPath.get().toAbsolutePath().toString().replace("zip", "syn"));
+                Path synFile = Path.of(answerPath.get().toAbsolutePath().toString().replace("xml.zip", "syn"));
                 sendService.sendFileAnswer0(Files.createFile(synFile));
                 log.info("Send message:{}", synFile.getFileName().toString());
             } catch (IOException e) {
